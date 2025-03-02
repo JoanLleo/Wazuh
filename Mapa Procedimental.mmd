@@ -1,45 +1,59 @@
----
-config:
-  layout: fixed
-  theme: redux
-  look: classic
----
-flowchart LR
-    T["Implementación de Wazuh"] --> A["Preparación del Entorno"] & B["Instalación de Wazuh Indexer"] & C["Instalación del Servidor Wazuh"] & D["Instalación de Wazuh Dashboard"] & E["Implementación de Agentes Wazuh"] & F["Configuración de Monitoreo y Seguridad"] & G["Pruebas y Validación"] & H["Mantenimiento y Optimización"]
-    A -- Definir requisitos --> A1["Hardware y Software"]
-    A -- Configurar sistemas operativos --> A2["Ubuntu, CentOS, Debian, Windows"]
-    A -- Instalar dependencias --> A3["curl, unzip, etc."]
-    A -- Configurar firewall --> A4["Reglas y permisos"]
-    B -- Descargar e instalar --> B1["Wazuh Indexer"]
-    B -- Configurar clúster --> B2["Nodos en clúster"]
-    B -- Configurar seguridad --> B3["SSL/TLS"]
-    B -- Configurar usuarios --> B4["Roles y autenticación"]
-    B -- Validar servicio --> B5["systemctl status wazuh-indexer"]
-    C -- Descargar e instalar --> C1["Servidor Wazuh"]
-    C -- Conectar con Indexer --> C2["Configuración"]
-    C -- Ajustar configuración --> C3["ossec.conf"]
-    C -- Habilitar reglas --> C4["Reglas y decodificadores"]
-    C -- Verificar servicio --> C5["systemctl start wazuh-manager"]
-    D -- Descargar e instalar --> D1["Wazuh Dashboard"]
-    D -- Conectar con Indexer y Manager --> D2["Configuración"]
-    D -- Ajustar permisos --> D3["Usuarios y autenticación"]
-    D -- Habilitar módulos --> D4["Plugins según necesidades"]
-    D -- Verificar acceso --> D5["http://IP_DEL_SERVIDOR:5601"]
-    E -- Determinar sistemas --> E1["Windows, Linux, macOS"]
-    E -- Descargar e instalar --> E2["Agentes"]
-    E -- Configurar conexión --> E3["Servidor Wazuh"]
-    E -- Registrar agentes --> E4["En el servidor"]
-    E -- Validar comunicación --> E5["agent_control -l"]
-    F -- Definir reglas --> F1["Alertas personalizadas"]
-    F -- Integrar con herramientas --> F2["SIEM, Syslog"]
-    F -- Ajustar políticas --> F3["Seguridad y auditoría"]
-    F -- Implementar cifrado --> F4["Autenticación segura"]
-    G -- Pruebas de logs --> G1["Recolección de datos"]
-    G -- Simular ataques --> G2["Validar detección"]
-    G -- Revisar dashboards --> G3["Alertas"]
-    G -- Ajustar configuración --> G4["Optimización"]
-    H -- Monitorear rendimiento --> H1["Estado de servicios"]
-    H -- Actualizar componentes --> H2["Wazuh y dependencias"]
-    H -- Revisar logs --> H3["Solución de problemas"]
-    H -- Agregar nuevos agentes --> H4["Crecimiento de la red"]
+graph LR;
+  T[Implementación de Wazuh] --> A[Preparación del Entorno]
+  T --> B[Instalación de Wazuh Indexer]
+  T --> C[Instalación del Servidor Wazuh]
+  T --> D[Instalación de Wazuh Dashboard]
+  T --> E[Asegurar la Instalación]
+  T --> F[Pruebas y Validación]
 
+  %% PREPARACIÓN DEL ENTORNO
+  A -->|Definir requisitos| A1[Hardware y Software]
+  A -->|Configurar sistemas operativos| A2[Ubuntu, CentOS, Debian]
+  A -->|Instalar dependencias| A3[debconf, adduser, procps, gnupg, curl]
+  A -->|Configurar firewall| A4[Reglas y permisos]
+
+  %% INSTALACIÓN DEL INDEXADOR
+  B -->|Descargar herramientas| B1[Descargar wazuh-certs-tool.sh y config.yml]
+  B -->|Configurar nodos| B2[Editar config.yml con IPs y nombres de nodos]
+  B -->|Generar certificados| B3[Ejecutar wazuh-certs-tool.sh -A]
+  B -->|Comprimir certificados| B4[tar -cvf wazuh-certificates.tar]
+  B -->|Agregar repositorio Wazuh| B5[Agregar clave GPG y actualizar apt]
+  B -->|Instalar Wazuh Indexer| B6[apt install wazuh-indexer]
+  B -->|Configurar seguridad| B7[Editar opensearch.yml - cluster.name, node.name]
+  B -->|Implementar certificados| B8[Copiar y configurar permisos en /etc/wazuh-indexer/certs]
+  B -->|Iniciar servicio| B9[systemctl start wazuh-indexer]
+  B -->|Inicializar clúster| B10[indexer-security-init.sh]
+  B -->|Validar estado| B11[curl -k -u admin:admin https://<indexer_ip>:9200]
+
+  %% INSTALACIÓN DEL SERVIDOR WAZUH
+  C -->|Instalar Wazuh Manager| C1[apt install wazuh-manager]
+  C -->|Habilitar y iniciar servicio| C2[systemctl start wazuh-manager]
+  C -->|Configurar conexión con Indexer| C3[Editar ossec.conf con IP del Indexer]
+  C -->|Habilitar reglas| C4[Agregar reglas y decodificadores personalizados]
+  C -->|Instalar Filebeat| C5[apt install filebeat]
+  C -->|Configurar Filebeat| C6[Editar filebeat.yml con IP del Indexer]
+  C -->|Crear almacén de claves| C7[filebeat keystore create]
+  C -->|Descargar módulo Wazuh| C8[curl -s wazuh-filebeat-0.4.tar]
+  C -->|Implementar certificados| C9[Copiar certificados a /etc/filebeat/certs]
+  C -->|Habilitar y verificar servicio| C10[systemctl start filebeat]
+
+  %% INSTALACIÓN DEL DASHBOARD
+  D -->|Instalar dependencias| D1[apt install debhelper tar curl libcap2-bin]
+  D -->|Agregar repositorio Wazuh| D2[Agregar clave GPG y actualizar apt]
+  D -->|Instalar Wazuh Dashboard| D3[apt install wazuh-dashboard]
+  D -->|Configurar Dashboard| D4[Editar opensearch_dashboards.yml - IP Indexer]
+  D -->|Implementar certificados| D5[Copiar certificados a /etc/wazuh-dashboard/certs]
+  D -->|Iniciar servicio| D6[systemctl start wazuh-dashboard]
+  D -->|Verificar acceso| D7[https://]
+  
+  %% ASEGURAR LA INSTALACIÓN
+  E -->|Cambiar contraseñas predeterminadas| E1[Ejecutar wazuh-passwords-tool.sh]
+  E -->|Actualizar credenciales en Filebeat| E2[filebeat keystore add password]
+  E -->|Actualizar credenciales en Dashboard| E3[Editar wazuh.yml]
+  E -->|Reiniciar servicios| E4[systemctl restart filebeat & wazuh-dashboard]
+
+  %% PRUEBAS Y VALIDACIÓN
+  F -->|Verificar logs y alertas| F1[filebeat test output]
+  F -->|Probar conectividad| F2[curl -k -u admin:admin https://<indexer_ip>:9200]
+  F -->|Acceder a Wazuh| F3[https://<dashboard_ip>]
+  F -->|Optimizar configuración| F4[Ajustes de rendimiento]
